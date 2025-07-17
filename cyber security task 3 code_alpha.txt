@@ -1,0 +1,60 @@
+TASK:3 SECURE CODING REVIEW
+Question:1 
+select a programming language and application to audict?
+Answer:
+Language Chosen: Python
+Application: A web-based login system
+Question:2 
+Perform a code review to identify security vulnerabilities?
+Answer:
+import sqlite3
+import os
+
+# Hardcoded secret
+SECRET_KEY = "my_super_secret_key"
+
+def login(username, password):
+    # Insecure SQL query (vulnerable to SQL injection)
+    conn = sqlite3.connect("users.db")
+    cursor = conn.cursor()
+    query = f"SELECT * FROM users WHERE username='{username}' AND password='{password}'"
+    cursor.execute(query)
+    result = cursor.fetchone()
+
+    if result:
+        print("Login successful")
+    else:
+        print("Login failed")
+
+def run_command():
+    user_input = input("Enter command to run: ")
+    os.system(user_input)  # Dangerous: executes any system command
+
+def submit_form(data):
+    # No input validation or sanitization
+    print("Form submitted with:", data)
+
+def send_data():
+    # Simulating data sent over unencrypted HTTP
+    print("Sending data to http://example.com/api")
+The code allows SQL injection, unsafe system command execution, and accepts unvalidated input, posing major security risks. It also transmits data over insecure HTTP, exposing sensitive information.
+Question:3
+Use tools like static analyzers or manual inspection methods?
+We used the static analysis tool Bandit to scan the Python code and identified critical vulnerabilities such as hardcoded secrets, SQL injection, dangerous use of os.system, and lack of input validation. Bandit flagged these as high-severity issues. Manual inspection also confirmed insecure communication (using HTTP). These findings highlight the need for secure coding practices and input sanitization
+Question :4 
+Provide recommendations and best practices for secure coding?
+Answer:
+Use parameterized queries to prevent SQL injection.
+Validate and sanitize all user input.
+Avoid using dangerous functions like eval(), exec(), pickle.load().
+Store passwords using strong hashing algorithms (e.g., bcrypt).
+Keep libraries up to date and avoid deprecated modules.
+Use environment variables for secrets, not hardcoded value.
+Question:5
+Document findings and suggest remediation steps?
+Answer:
+Example Finding:
+Issue: User input is directly used in SQL query.
+Code: cursor.execute("SELECT * FROM users WHERE name = '" + username + "'")
+✅ Fix: Use parameterized query:
+cursor.execute("SELECT * FROM users WHERE name = %s", (username,))

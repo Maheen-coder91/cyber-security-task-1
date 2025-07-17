@@ -1,0 +1,107 @@
+task :4 Network intrusion detection system 
+Question no:1
+Set up a network-based intrusion detection system?
+Answer:
+Use Snort or Suricata
+Install on a Linux system or VM
+Connect it to a network interface in promiscuous mode to capture packets
+Question :2
+Configure rules and alerts?
+Answer:
+Use or write Snort rules like:
+bash
+Copy
+Edit
+alert tcp any any -> any 80 (msg:"Possible HTTP Attack"; content:"cmd.exe"; sid:1000001;)
+Suricata rules are similar but offer richer protocol support.
+Question:3
+Monitor network traffic continuously for potential threats?
+Answer:
+Tools automatically scan packets in real-time.
+Alerts will be triggered for matched rules (malware patterns, scans, etc.).
+Logs stored in /var/log/snort or Suricata’s /var/log/suricata/eve.json.
+Question:4 
+Implement response mechanisms?
+Answer:
+Examples:
+Send email alerts to sysadmin
+Block IPs with firewall (e.g., via iptables or fail2ban)
+Trigger auto-disconnection or disable login on attack
+Question :5 
+Visualize detected attacks using dashboards or graphs?
+Amswer:
+Use Kibana + Elasticsearch + Logstash (ELK stack)
+Or simpler tools like:
+Snorby or BASE for Snort
+Scirius for Suricata
+You can create graphs for:
+Most attacked IPs
+Attack types over time
+Protocol distribution
+overall code for task:4 
+import json
+import time
+from collections import Counter
+import matplotlib.pyplot as plt
+
+# Monitor Suricata alerts in real-time
+def monitor_suricata_alerts(log_file):
+    print("🔍 Starting Suricata Alert Monitor...")
+    signature_list = []
+
+    try:
+        with open(log_file, 'r') as f:
+            f.seek(0, 2)  # Move to end of file
+            while True:
+                line = f.readline()
+                if not line:
+                    time.sleep(0.5)
+                    continue
+                try:
+                    alert = json.loads(line)
+                    if "alert" in alert:
+                        sig = alert["alert"]["signature"]
+                        signature_list.append(sig)
+                        print("\n🚨 Intrusion Alert Detected!")
+                        print("Signature:", sig)
+                        print("Source IP:", alert.get("src_ip"))
+                        print("Destination IP:", alert.get("dest_ip"))
+                        print("Protocol:", alert.get("proto"))
+                        print("-" * 50)
+
+                        # Stop and visualize after 10 alerts
+                        if len(signature_list) >= 10:
+                            break
+                except json.JSONDecodeError:
+                    continue
+    except FileNotFoundError:
+        print("❌ Log file not found. Ensure Suricata is running and logging to eve.json.")
+    
+    return signature_list
+
+# Generate a bar chart of detected alerts
+def visualize_alerts(signatures):
+    if not signatures:
+        print("No alerts to display.")
+        return
+
+    counts = Counter(signatures)
+    plt.bar(counts.keys(), counts.values(), color='crimson')
+    plt.title("Suricata Alert Summary")
+    plt.ylabel("Alert Count")
+    plt.xticks(rotation=15)
+    plt.tight_layout()
+    plt.show()
+
+# Main execution
+log_path = "/var/log/suricata/eve.json"  # Default Suricata alert log
+detected_signatures = monitor_suricata_alerts(log_path)
+visualize_alerts(detected_signatures)
+What this code does:
+Monitors Suricata's eve.json alert log in real time.
+Detects and prints intrusion alerts (e.g., ping scan, port scan).
+After 10 alerts, it shows a bar chart summarizing the attacks.
+You just need:
+Suricata installed and running
+Suricata logging to eve.json
+Some basic attacks simulated (e.g., ping from another machine)
